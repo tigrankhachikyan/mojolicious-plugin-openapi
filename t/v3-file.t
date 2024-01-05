@@ -17,6 +17,10 @@ $t->post_ok('/api/upload', form => {foo => 42})->status_is(400)
   ->json_is('/errors/0', {message => 'Missing property.', path => '/body/image'});
 
 my $image = Mojo::Asset::Memory->new->add_chunk('smileyface');
+
+$t->post_ok('/api/upload', form => {unknown_param_name => {file => $image}})->status_is(400)
+  ->json_is('/errors/0', {message => 'Missing property.', path => '/body/image'});
+
 $t->post_ok(
   '/api/upload',
   {Accept => 'application/json'},

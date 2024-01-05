@@ -123,11 +123,16 @@ sub _helper_parse_request_body {
   my ($c, $param) = @_;
 
   my $content_type = $c->req->headers->content_type || '';
+  $content_type =~ s/;.*$//; # remove charset
   my $res          = {content_type => $content_type, exists => !!$c->req->body_size};
 
   eval {
     $res->{value} //= $c->req->body_params->to_hash
       if grep { $content_type eq $_ } qw(application/x-www-form-urlencoded multipart/form-data);
+    
+    for my $upload ($c->req->uploads->@*) {
+      $res->{value}->{$upload->name} = $upload->size;
+    }
 
     # Trying to use the already parsed json() or fallback to manually decoding the request
     # since it will make the eval {} fail on invalid json.
