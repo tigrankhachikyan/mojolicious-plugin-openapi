@@ -127,12 +127,17 @@ sub _helper_parse_request_body {
   my $res          = {content_type => $content_type, exists => !!$c->req->body_size};
 
   eval {
-    $res->{value} //= $c->req->body_params->to_hash
-      if grep { $content_type eq $_ } qw(application/x-www-form-urlencoded multipart/form-data);
-    
-    for my $upload ($c->req->uploads->@*) {
-      $res->{value}->{$upload->name} = $upload->size;
+    if ($content_type eq 'application/x-www-form-urlencoded') {
+      $res->{value} //= $c->req->body_params->to_hash;
     }
+    elsif ($content_type eq 'multipart/form-data') {
+      $res->{value} //= $c->req->body_params->to_hash;
+
+      $res->{value}{$_->name} = $_->size 
+        for $c->req->uploads->@*;
+    }
+
+    # NOTE: Maybe we should handle content_type application/json explicitly and other types as a fallback?
 
     # Trying to use the already parsed json() or fallback to manually decoding the request
     # since it will make the eval {} fail on invalid json.
