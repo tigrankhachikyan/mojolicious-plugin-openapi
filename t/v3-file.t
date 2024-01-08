@@ -56,6 +56,7 @@ paths:
                   format: binary
           multipart/form-data:
             schema:
+              type: object
               required: [ image ]
               properties:
                 image:
